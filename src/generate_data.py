@@ -35,6 +35,6 @@ df['clicks'] = np.random.poisson(lam=3 if df['group'][0] == 'control' else 4, si
 df['views'] = df['clicks'] + np.random.randint(0, 3, size=n_users)
 
 # Export to CSV
-df.to_csv('synthetic/ab_test_fintech_data.csv', index=False)
+df.to_csv('../data/synthetic/ab_test_fintech_data.csv', index=False)
 
 print("✅ Dataset generated and saved as 'ab_test_fintech_data.csv'")
