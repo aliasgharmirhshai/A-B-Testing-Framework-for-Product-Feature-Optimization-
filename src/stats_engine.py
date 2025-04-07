@@ -2,16 +2,50 @@ import pandas as pd
 import scipy.stats as stats
 import numpy as np
 
+def compute_confidence_interval(conversions, total, confidence=0.95):
+    """Returns lower and upper bound of the confidence interval"""
+    if total == 0:
+        return (0, 0)
+    p = conversions / total
+    z = stats.norm.ppf(1 - (1 - confidence) / 2)
+    margin = z * np.sqrt(p * (1 - p) / total)
+    return (p - margin, p + margin)
+
 
 def calculate_metrics(df):
-    metrics = df.groupby('group').agg(
+    groups = df.groupby('group').agg(
         total_users=('user_id', 'count'),
         total_converted=('converted', 'sum'),
         conversion_rate=('converted', 'mean'),
         avg_clicks=('clicks', 'mean'),
         avg_views=('views', 'mean')
     ).reset_index()
-    return metrics
+
+    lower_bounds = []
+    upper_bounds = []
+
+    for _, row in groups.iterrows():
+        lower, upper = compute_confidence_interval(
+            row['total_converted'], row['total_users']
+        )
+        lower_bounds.append(lower)
+        upper_bounds.append(upper)
+
+    groups['conversion_CI_lower'] = lower_bounds
+    groups['conversion_CI_upper'] = upper_bounds
+
+    return groups
+
+
+def run_chi_squared_test(df):
+    contingency = pd.crosstab(df['group'], df['converted'])
+    chi2, p, dof, expected = stats.chi2_contingency(contingency)
+    return {
+        'test': 'Chi-Squared',
+        'chi2_stat': chi2,
+        'p_value': p,
+        'is_significant': p < 0.05
+    }
 
 
 def run_chi_squared_test(df):
@@ -71,3 +105,4 @@ def summarize_results(df):
         'chi_squared': chi2_result,
         'effect_size': effect
     }
+
