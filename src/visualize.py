@@ -93,3 +93,5 @@ def generate_plots(df, output_folder):
     plot_cumulative_conversion(df, output_folder)
     plot_user_funnel(df, output_folder)
     plot_distributions(df, output_folder)
+
+    print(f"\n✅ Plots saved to {output_folder}")
