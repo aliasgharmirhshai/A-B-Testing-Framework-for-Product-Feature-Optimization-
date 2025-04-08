@@ -22,7 +22,6 @@ for group in groups:
         converted = np.random.binomial(1, conversion_rate_test)
     conversions.append(converted)
 
-# Create DataFrame
 df = pd.DataFrame({
     'user_id': user_ids,
     'group': groups,
