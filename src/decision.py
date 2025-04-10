@@ -1,13 +1,14 @@
 import os
 from google import genai
 from google.genai import types
+from fpdf import FPDF
 import pandas as pd
 from stats_engine import summarize_results
 from dotenv import load_dotenv
 from visualize import generate_plots
 
 # Load API key from config.env
-load_dotenv("../config.env")
+load_dotenv("config.env")
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 def send_to_gemini_for_report(payload, output_path):
@@ -17,7 +18,6 @@ def send_to_gemini_for_report(payload, output_path):
     """
     client = genai.Client(api_key=API_KEY)
 
-    # Define the model and content
     model = "gemini-2.0-flash"
     prompt = f"""
         You are a data analyst. Please generate a plain text detailed A/B testing report based on the following data. 
@@ -57,12 +57,10 @@ def send_to_gemini_for_report(payload, output_path):
         ),
     ]
 
-    # Configure the content generation
     generate_content_config = types.GenerateContentConfig(
         response_mime_type="text/plain",
     )
 
-    # Send the prompt and save the response to a file
     print("Generating report...")
     report = ""
     for chunk in client.models.generate_content_stream(
@@ -72,46 +70,39 @@ def send_to_gemini_for_report(payload, output_path):
     ):
         report += chunk.text
 
-    # Save the report to the specified output path as a plain text file
     with open(output_path, "w") as file:
       file.write(report)
     print(f"\n✅ Report saved to {output_path}")
 
 def generate_statistical_report(payload, statistical_report_path):
-  # Build Metrics section
   metrics_section = "Metrics:\n"
   if "metrics" in payload:
     for idx, record in enumerate(payload["metrics"], start=1):
       metrics_section += f"Record {idx}: {record}\n"
   
-  # Build T-Test Section
   t_test = payload.get("t_test", {})
   t_test_section = "T-Test Results:\n"
   t_test_section += f"Test Statistic: {t_test.get('t_stat', 'N/A')}\n"
   t_test_section += f"P-Value: {t_test.get('p_value', 'N/A')}\n"
   t_test_section += f"Is Significant: {t_test.get('is_significant', 'N/A')}\n"
   
-  # Build Chi-Squared Section
   chi_squared = payload.get("chi_squared", {})
   chi_squared_section = "Chi-Squared Test Results:\n"
   chi_squared_section += f"Test Statistic: {chi_squared.get('chi2_stat', 'N/A')}\n"
   chi_squared_section += f"P-Value: {chi_squared.get('p_value', 'N/A')}\n"
   chi_squared_section += f"Is Significant: {chi_squared.get('is_significant', 'N/A')}\n"
   
-  # Build Effect Size Section
   effect_size = payload.get("effect_size", {})
   effect_size_section = "Effect Size:\n"
   effect_size_section += f"Cohen's d: {effect_size.get('effect_size', 'N/A')}\n"
   effect_size_section += f"Interpretation: {effect_size.get('interpretation', 'N/A')}\n"
   
-  # Build the recommendations section
   recommendations = "Analysis & Recommendations:\n"
   recommendations += "The report indicates the performance differences between the control and test groups. "
   recommendations += "Based on the statistical tests (T-Test and Chi-Squared) and the effect size, evaluate the significance of the differences. "
   recommendations += "If the tests are statistically significant and the effect size is meaningful, consider rolling out the new feature. "
   recommendations += "Otherwise, further analysis or iteration might be required.\n"
   
-  # Combine everything into a plain text format
   text_content = (
     "A/B Testing Statistical Report\n\n"
     "This report provides a detailed analysis of the A/B testing results to support decision-making.\n\n"
@@ -122,42 +113,100 @@ def generate_statistical_report(payload, statistical_report_path):
     f"{recommendations}\n"
   )
   
-  # Save the text content to the specified file path
   with open(statistical_report_path, "w", encoding="utf-8") as file:
     file.write(text_content)
   
   print(f"\n✅ Statistical Report successfully saved to {statistical_report_path}")
 
 
-if __name__ == "__main__":
-    # Load data and summarize results
-    data = pd.read_csv("../data/synthetic/ab_test_fintech_data.csv")
-    results = summarize_results(data)
 
-    # Prepare metrics for display
-    metrics = results['metrics'].copy()
-    metrics['conversion_rate'] = (metrics['conversion_rate'] * 100).round(1).astype(str) + '%'
-    metrics['conversion_CI_lower'] = (metrics['conversion_CI_lower'] * 100).round(1).astype(str) + '%'
-    metrics['conversion_CI_upper'] = (metrics['conversion_CI_upper'] * 100).round(1).astype(str) + '%'
+def save_outputs_to_pdf(report_path, statistical_report_path, plot_path, output_pdf_path):
+    """
+    Combines the Gemini report, statistical report, and plots into a single PDF file.
 
-    metrics_result = metrics[['group', 'conversion_rate', 'conversion_CI_lower', 'conversion_CI_upper']]
-    t_test = results['t_test']
-    chi2 = results['chi_squared']
-    effect = results['effect_size']
+    Args:
+        report_path (str): Path to the Gemini report text file.
+        statistical_report_path (str): Path to the statistical report text file.
+        plot_path (str): Path to the directory containing plots.
+        output_pdf_path (str): Path to save the combined PDF file.
+    """
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
 
-    payload = {
-        "metrics": metrics_result.to_dict(orient="records"),
-        "t_test": t_test,
-        "chi_squared": chi2,
-        "effect_size": effect
-    }
+    # Add Gemini Report
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, "Gemini Report", ln=True, align="C")
+    pdf.ln(10)
+    with open(report_path, "r", encoding="utf-8") as file:
+        for line in file:
+            pdf.multi_cell(0, 10, line)
 
-    # Output path for the report
-    report_path = "../output/reports/report.txt"
-    statistical_report_path = "../output/reports/statistical_report.txt"
-    plot_path = "../output/plots/"
+    # Add Statistical Report
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, "Statistical Report", ln=True, align="C")
+    pdf.ln(10)
+    with open(statistical_report_path, "r", encoding="utf-8") as file:
+        for line in file:
+            pdf.multi_cell(0, 10, line)
 
-    # Send the payload to the Gemini API for report generation
-    send_to_gemini_for_report(payload, report_path)
-    generate_statistical_report(payload, statistical_report_path)
-    generate_plots(data, plot_path)
+    # Add Plots
+    import os
+    from glob import glob
+
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, "Plots", ln=True, align="C")
+    pdf.ln(10)
+
+    plot_files = glob(os.path.join(plot_path, "*.png"))
+    for plot_file in plot_files:
+        pdf.add_page()
+        pdf.image(plot_file, x=10, y=30, w=190)  # Adjust dimensions as needed
+
+    # Save the PDF
+    pdf.output(output_pdf_path)
+    print(f"\n✅ Combined PDF saved to {output_pdf_path}")
+
+
+def process_ab_test_results(data_path, report_path, statistical_report_path, plot_path, output_pdf_path):
+  """
+  Processes A/B test results, generates reports, and combines outputs into a single PDF.
+
+  Args:
+    data_path (str): Path to the CSV file containing A/B test data.
+    report_path (str): Path to save the Gemini report text file.
+    statistical_report_path (str): Path to save the statistical report text file.
+    plot_path (str): Path to save generated plots.
+    output_pdf_path (str): Path to save the combined PDF file.
+  """
+  # Load data and summarize results
+  data = pd.read_csv(data_path)
+  results = summarize_results(data)
+
+  # Prepare metrics for display
+  metrics = results['metrics'].copy()
+  metrics['conversion_rate'] = (metrics['conversion_rate'] * 100).round(1).astype(str) + '%'
+  metrics['conversion_CI_lower'] = (metrics['conversion_CI_lower'] * 100).round(1).astype(str) + '%'
+  metrics['conversion_CI_upper'] = (metrics['conversion_CI_upper'] * 100).round(1).astype(str) + '%'
+
+  metrics_result = metrics[['group', 'conversion_rate', 'conversion_CI_lower', 'conversion_CI_upper']]
+  t_test = results['t_test']
+  chi2 = results['chi_squared']
+  effect = results['effect_size']
+
+  payload = {
+    "metrics": metrics_result.to_dict(orient="records"),
+    "t_test": t_test,
+    "chi_squared": chi2,
+    "effect_size": effect
+  }
+
+  # Generate outputs
+  send_to_gemini_for_report(payload, report_path)
+  generate_statistical_report(payload, statistical_report_path)
+  generate_plots(data, plot_path)
+
+  # Save all outputs to a single PDF
+  save_outputs_to_pdf(report_path, statistical_report_path, plot_path, output_pdf_path)
