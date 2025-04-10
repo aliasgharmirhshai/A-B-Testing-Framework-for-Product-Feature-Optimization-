@@ -41,6 +41,33 @@ Leveraging an LLM API (Gemini 2.0 Flash) for report generation, it translates co
 
 ---
 
+## Installation
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/yourusername/ab-testing-framework.git
+   cd ab-testing-framework
+
+2. **Create and Activate a Virtual Environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate   # On Windows, use `venv\Scripts\activate`
+
+3. **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+---
+
+## Usage
+
+**Data management in this project has not been fully optimized yet. To use it effectively, your data structure must align with the predefined format.**
+
+1. Save the data in the 'data/raw' path.
+2. **Run:**
+    ```bash
+    python3 main.py
+---
+
 ## 🧾 Dataset Description
 
 This dataset simulates user interaction data for an A/B testing experiment conducted in a fintech mobile app. It contains behavioral and conversion data for both control and test groups.
@@ -82,3 +109,8 @@ This dataset simulates user interaction data for an A/B testing experiment condu
 - **Purpose:** Represents overall user activity and helps analyze general engagement across app features.
 
 ---
+
+## Contributing
+
+**Contributions are welcome!** Please fork the repository and submit your pull requests. For major changes, open an issue first to discuss what you'd like to change.
+
