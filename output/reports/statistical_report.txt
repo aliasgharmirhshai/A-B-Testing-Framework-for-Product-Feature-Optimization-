@@ -1,0 +1,25 @@
+A/B Testing Statistical Report
+
+This report provides a detailed analysis of the A/B testing results to support decision-making.
+
+Metrics:
+Record 1: {'group': 'control', 'conversion_rate': '10.8%', 'conversion_CI_lower': '8.1%', 'conversion_CI_upper': '13.6%'}
+Record 2: {'group': 'test', 'conversion_rate': '16.9%', 'conversion_CI_lower': '13.6%', 'conversion_CI_upper': '20.1%'}
+
+T-Test Results:
+Test Statistic: -2.781044104875063
+P-Value: 0.0055226108112078716
+Is Significant: True
+
+Chi-Squared Test Results:
+Test Statistic: 7.1370086650457445
+P-Value: 0.007550901248336328
+Is Significant: True
+
+Effect Size:
+Cohen's d: 0.1755985644385392
+Interpretation: Small
+
+Analysis & Recommendations:
+The report indicates the performance differences between the control and test groups. Based on the statistical tests (T-Test and Chi-Squared) and the effect size, evaluate the significance of the differences. If the tests are statistically significant and the effect size is meaningful, consider rolling out the new feature. Otherwise, further analysis or iteration might be required.
+

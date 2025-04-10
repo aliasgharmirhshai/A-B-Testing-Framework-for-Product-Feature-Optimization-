@@ -72,82 +72,61 @@ def send_to_gemini_for_report(payload, output_path):
     ):
         report += chunk.text
 
-    # Save the report to the specified output path
+    # Save the report to the specified output path as a plain text file
     with open(output_path, "w") as file:
-        file.write(f"<html><body><pre>{report}</pre></body></html>")
+      file.write(report)
     print(f"\n✅ Report saved to {output_path}")
 
 def generate_statistical_report(payload, statistical_report_path):
-    # Build Metrics section
-    metrics_section = ""
-    if "metrics" in payload:
-        metrics_section += "<h3>Metrics</h3>\n"
-        for idx, record in enumerate(payload["metrics"], start=1):
-            metrics_section += f"<p><b>Record {idx}:</b> {record}</p>\n"
-    
-    # Build T-Test Section
-    t_test = payload.get("t_test", {})
-    t_test_section = "<h3>T-Test Results</h3>\n"
-    t_test_section += f"<p>Test Statistic: {t_test.get('t_stat', 'N/A')}</p>\n"
-    t_test_section += f"<p>P-Value: {t_test.get('p_value', 'N/A')}</p>\n"
-    t_test_section += f"<p>Is Significant: {t_test.get('is_significant', 'N/A')}</p>\n"
-    
-    # Build Chi-Squared Section
-    chi_squared = payload.get("chi_squared", {})
-    chi_squared_section = "<h3>Chi-Squared Test Results</h3>\n"
-    chi_squared_section += f"<p>Test Statistic: {chi_squared.get('chi2_stat', 'N/A')}</p>\n"
-    chi_squared_section += f"<p>P-Value: {chi_squared.get('p_value', 'N/A')}</p>\n"
-    chi_squared_section += f"<p>Is Significant: {chi_squared.get('is_significant', 'N/A')}</p>\n"
-    
-    # Build Effect Size Section
-    effect_size = payload.get("effect_size", {})
-    effect_size_section = "<h3>Effect Size</h3>\n"
-    effect_size_section += f"<p>Cohen's d: {effect_size.get('effect_size', 'N/A')}</p>\n"
-    effect_size_section += f"<p>Interpretation: {effect_size.get('interpretation', 'N/A')}</p>\n"
-    
-    # Build the recommendations section
-    recommendations = "<h3>Analysis & Recommendations</h3>\n"
-    recommendations += "<p>The report indicates the performance differences between the control and test groups. "
-    recommendations += "Based on the statistical tests (T-Test and Chi-Squared) and the effect size, evaluate the significance of the differences. "
-    recommendations += "If the tests are statistically significant and the effect size is meaningful, consider rolling out the new feature. "
-    recommendations += "Otherwise, further analysis or iteration might be required.</p>\n"
-    
-    # Combine everything into an HTML template
-    html_content = f"""
-    <html>
-      <head>
-        <title>Statistical Report</title>
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-          }}
-          h1, h2, h3 {{
-            color: #333;
-          }}
-          p {{
-            margin: 5px 0;
-          }}
-        </style>
-      </head>
-      <body>
-        <h1>A/B Testing Statistical Report</h1>
-        <p>This report provides a detailed analysis of the A/B testing results to support decision-making.</p>
-        {metrics_section}
-        {t_test_section}
-        {chi_squared_section}
-        {effect_size_section}
-        {recommendations}
-      </body>
-    </html>
-    """
-    
-    # Save the HTML content to the specified file path
-    with open(statistical_report_path, "w", encoding="utf-8") as file:
-        file.write(html_content)
-    
-    print(f"\n✅ Statistical Report successfully saved to {statistical_report_path}")
+  # Build Metrics section
+  metrics_section = "Metrics:\n"
+  if "metrics" in payload:
+    for idx, record in enumerate(payload["metrics"], start=1):
+      metrics_section += f"Record {idx}: {record}\n"
+  
+  # Build T-Test Section
+  t_test = payload.get("t_test", {})
+  t_test_section = "T-Test Results:\n"
+  t_test_section += f"Test Statistic: {t_test.get('t_stat', 'N/A')}\n"
+  t_test_section += f"P-Value: {t_test.get('p_value', 'N/A')}\n"
+  t_test_section += f"Is Significant: {t_test.get('is_significant', 'N/A')}\n"
+  
+  # Build Chi-Squared Section
+  chi_squared = payload.get("chi_squared", {})
+  chi_squared_section = "Chi-Squared Test Results:\n"
+  chi_squared_section += f"Test Statistic: {chi_squared.get('chi2_stat', 'N/A')}\n"
+  chi_squared_section += f"P-Value: {chi_squared.get('p_value', 'N/A')}\n"
+  chi_squared_section += f"Is Significant: {chi_squared.get('is_significant', 'N/A')}\n"
+  
+  # Build Effect Size Section
+  effect_size = payload.get("effect_size", {})
+  effect_size_section = "Effect Size:\n"
+  effect_size_section += f"Cohen's d: {effect_size.get('effect_size', 'N/A')}\n"
+  effect_size_section += f"Interpretation: {effect_size.get('interpretation', 'N/A')}\n"
+  
+  # Build the recommendations section
+  recommendations = "Analysis & Recommendations:\n"
+  recommendations += "The report indicates the performance differences between the control and test groups. "
+  recommendations += "Based on the statistical tests (T-Test and Chi-Squared) and the effect size, evaluate the significance of the differences. "
+  recommendations += "If the tests are statistically significant and the effect size is meaningful, consider rolling out the new feature. "
+  recommendations += "Otherwise, further analysis or iteration might be required.\n"
+  
+  # Combine everything into a plain text format
+  text_content = (
+    "A/B Testing Statistical Report\n\n"
+    "This report provides a detailed analysis of the A/B testing results to support decision-making.\n\n"
+    f"{metrics_section}\n"
+    f"{t_test_section}\n"
+    f"{chi_squared_section}\n"
+    f"{effect_size_section}\n"
+    f"{recommendations}\n"
+  )
+  
+  # Save the text content to the specified file path
+  with open(statistical_report_path, "w", encoding="utf-8") as file:
+    file.write(text_content)
+  
+  print(f"\n✅ Statistical Report successfully saved to {statistical_report_path}")
 
 
 if __name__ == "__main__":
@@ -174,8 +153,8 @@ if __name__ == "__main__":
     }
 
     # Output path for the report
-    report_path = "../output/reports/report.html"
-    statistical_report_path = "../output/reports/statistical_report.html"
+    report_path = "../output/reports/report.txt"
+    statistical_report_path = "../output/reports/statistical_report.txt"
     plot_path = "../output/plots/"
 
     # Send the payload to the Gemini API for report generation
